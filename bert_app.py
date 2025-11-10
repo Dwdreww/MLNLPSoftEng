@@ -5,7 +5,7 @@ import pandas as pd
 # ---------------------------------
 # ✅ Wrapper: add rating + bar plot
 # ---------------------------------
-def classify_comment(comment, threshold=0.5):
+def classify_comment(comment, threshold=0.3):
     """Return toxicity rating + DataFrame for Gradio BarPlot."""
     results = predict_comment(comment)
 

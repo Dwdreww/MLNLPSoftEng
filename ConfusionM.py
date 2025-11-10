@@ -1,6 +1,12 @@
+import numpy as np
 from sklearn.metrics import multilabel_confusion_matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+label_cols = ['toxic','severe_toxic','obscene','threat','insult','identity_hate']
+
+preds = np.load("preds.npy")
+test_labels = np.load("labels.npy")
 
 cm = multilabel_confusion_matrix(test_labels, preds)
 
