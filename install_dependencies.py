@@ -2,12 +2,14 @@
 
 import subprocess
 import sys
-import platform
-import os
 
 def install(package):
     """Install a package using pip."""
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+def uninstall(package):
+    """Uninstall a package using pip."""
+    subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", package])
 
 # -----------------------------
 # 1️⃣ Core libraries
@@ -18,11 +20,12 @@ install("matplotlib")
 install("seaborn")
 install("tqdm")
 install("scikit-learn")
+install("accelerate==1.11.0")
 
 # -----------------------------
-# 2️⃣ Hugging Face Transformers
+# 2️⃣ Transformers
 # -----------------------------
-install("transformers[sentencepiece]")  # includes tokenizers
+install("transformers==4.45.2")
 
 # -----------------------------
 # 3️⃣ Detect GPU and install PyTorch accordingly
@@ -31,30 +34,36 @@ print("\n[INFO] Detecting GPU for PyTorch installation...")
 
 try:
     import torch
-    print("[INFO] PyTorch is already installed.")
+    print("[INFO] PyTorch is already installed. Uninstalling first...")
+    uninstall("torch")
+    uninstall("torchvision")
+    uninstall("torchaudio")
 except ImportError:
-    has_cuda = False
-    try:
-        # Check NVIDIA GPU
-        import subprocess
-        result = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 0:
-            has_cuda = True
-    except Exception:
-        has_cuda = False
+    print("[INFO] PyTorch not installed. Proceeding with installation.")
 
-    if has_cuda:
-        print("[INFO] NVIDIA GPU detected! Installing PyTorch with CUDA support...")
-        # You can customize the CUDA version depending on your GPU & OS
-        # This example uses CUDA 12.1 (RTX 4060 compatible)
-        install("torch==2.2.0+cu121 --index-url https://download.pytorch.org/whl/cu121")
-        install("torchvision==0.17.1+cu121 --index-url https://download.pytorch.org/whl/cu121")
-        install("torchaudio==2.2.1+cu121 --index-url https://download.pytorch.org/whl/cu121")
-    else:
-        print("[INFO] No NVIDIA GPU detected. Installing CPU-only PyTorch...")
-        install("torch")
-        install("torchvision")
-        install("torchaudio")
+has_cuda = False
+try:
+    result = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode == 0:
+        has_cuda = True
+except Exception:
+    has_cuda = False
+
+if has_cuda:
+    print("[INFO] NVIDIA GPU detected! Installing PyTorch with CUDA 12.1 support...")
+    subprocess.check_call([
+        sys.executable, "-m", "pip", "install",
+        "torch==2.5.1+cu121",
+        "torchvision==0.20.1+cu121",
+        "torchaudio==2.5.1+cu121",
+        "--index-url", "https://download.pytorch.org/whl/cu121"
+    ])
+
+else:
+    print("[INFO] No NVIDIA GPU detected. Installing CPU-only PyTorch...")
+    install("torch")
+    install("torchvision")
+    install("torchaudio")
 
 # -----------------------------
 # 4️⃣ Gradio for deployment
