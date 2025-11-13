@@ -7,6 +7,9 @@ python -m venv venv
 
 venv\Scripts\activate
 
+if venv activate has error: (ONE TIME CODE ONLY -- FOR THE FIRST ERROR ONLY!)
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
 python.exe -m pip install --upgrade pip
 
 python install_dependencies.py
