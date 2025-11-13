@@ -1,81 +1,69 @@
-import gradio as gr
-from bert_predict import predict_comment
-import pandas as pd
+# install_dependencies.py
 
-# ---------------------------------
-# ✅ Wrapper: add rating + bar plot
-# ---------------------------------
-def classify_comment(comment, threshold=0.3):
-    """Return toxicity rating + DataFrame for Gradio BarPlot."""
-    results = predict_comment(comment)
+import subprocess
+import sys
 
-    # Apply threshold: anything below the threshold is set to 0
-    results = {
-        label: (score if score >= threshold else 0.0)
-        for label, score in results.items()
-    }
+def install(package, index_url=None):
+    """Install a package using pip, optionally specifying an index URL."""
+    cmd = [sys.executable, "-m", "pip", "install", package]
+    if index_url:
+        cmd.extend(["--index-url", index_url])
+    subprocess.check_call(cmd)
 
-    # -------------------------------
-    # 🔹 Determine toxicity rating
-    # -------------------------------
-    # You can base this on the 'toxic' label
-    toxic_score = results.get("toxic", 0.0)
+# -----------------------------
+# 0️⃣ Upgrade pip, setuptools, wheel first
+# -----------------------------
+print("\n[INFO] Upgrading pip, setuptools, and wheel...")
+install("pip --upgrade")
+install("setuptools --upgrade")
+install("wheel --upgrade")
 
-    if toxic_score < 0.3:
-        toxic_class = "🟢 Clean / Non-toxic"
-    elif toxic_score < 0.6:
-        toxic_class = "🟠 Mildly Toxic"
-    else:
-        toxic_class = "🔴 Highly Toxic"
+# -----------------------------
+# 1️⃣ Core Python libraries
+# -----------------------------
+print("\n[INFO] Installing core Python libraries...")
+install("numpy")
+install("pandas")
+install("matplotlib")
+install("seaborn")
+install("tqdm")
+install("scikit-learn")
 
-    # -------------------------------
-    # 🔹 Convert to DataFrame for plot
-    # -------------------------------
-    df = pd.DataFrame({
-        "label": list(results.keys()),
-        "score": list(results.values())
-    })
+# -----------------------------
+# 2️⃣ Tokenizers & Transformers (prebuilt wheels, avoids Rust)
+# -----------------------------
+print("\n[INFO] Installing Transformers and Tokenizers...")
+install("tokenizers==0.13.3")         # prebuilt wheel
+install("transformers==4.30.2")       # compatible with tokenizers
 
-    # Return both the textual class and the bar data
-    return toxic_class, df
+# -----------------------------
+# 3️⃣ Detect GPU and install PyTorch accordingly
+# -----------------------------
+print("\n[INFO] Detecting NVIDIA GPU for PyTorch installation...")
 
+has_cuda = False
+try:
+    result = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode == 0:
+        has_cuda = True
+except Exception:
+    has_cuda = False
 
-# -------------------------------
-# ✅ Build Gradio Interface
-# -------------------------------
-demo = gr.Interface(
-    fn=classify_comment,
-    inputs=gr.Textbox(
-        label="Enter a comment",
-        placeholder="Type something toxic or polite...",
-        lines=3
-    ),
-    outputs=[
-        gr.Textbox(label="Toxicity Rating"),  # 🟢 add class text output
-        gr.BarPlot(
-            label="Toxicity Breakdown",
-            x="label",
-            y="score",
-            color="label",
-            title="Toxicity Levels per Category"
-        )
-    ],
-    title="Toxic Comment Classifier (BERT Multi-Label)",
-    description=(
-        "This BERT model detects multiple types of toxicity — such as insults, "
-        "threats, or hate speech — and shows both a toxicity rating and per-category intensity."
-    ),
-    examples=[
-        ["You are such an idiot!"],
-        ["I hope you have a great day!"],
-        ["I'll find you and make you pay."],
-        ["You don't belong here because of your race."],
-        ["This is disgusting behavior!"]
-    ]
-)
+if has_cuda:
+    print("[INFO] NVIDIA GPU detected! Installing PyTorch 2.7.1 + CUDA 11.8 (RTX 2060 compatible)...")
+    install("torch==2.7.1+cu118", "https://download.pytorch.org/whl/cu118")
+    install("torchvision==0.22.1+cu118", "https://download.pytorch.org/whl/cu118")
+    install("torchaudio==2.7.1", "https://download.pytorch.org/whl/cu118")
+else:
+    print("[INFO] No NVIDIA GPU detected. Installing CPU-only PyTorch...")
+    install("torch")
+    install("torchvision")
+    install("torchaudio")
 
-# -------------------------------
-# ✅ Launch app (debug=True)
-# -------------------------------
-if __name__ == "__main__":
-    demo.launch(debug=True)
+# -----------------------------
+# 4️⃣ Gradio for deployment
+# -----------------------------
+print("\n[INFO] Installing Gradio for deployment...")
+install("gradio")
+
+print("\n✅ All dependencies installed successfully!")
