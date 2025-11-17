@@ -39,18 +39,6 @@ val_texts, test_texts, val_labels, test_labels = train_test_split(
     random_state=42
 )
 
-# Increase the number of samples for testing/training
-train_texts = train_texts[:5000]   # increase training samples
-train_labels = train_labels[:5000]
-
-val_texts = val_texts[:1000]       # increase validation samples
-val_labels = val_labels[:1000]
-
-test_texts = test_texts[:1000]     # increase test samples
-test_labels = test_labels[:1000]
-
-
-
 print(f"✅ Train size: {len(train_texts)}")
 print(f"✅ Validation size: {len(val_texts)}")
 print(f"✅ Test size: {len(test_texts)}")
@@ -123,7 +111,7 @@ training_args = TrainingArguments(
     per_device_train_batch_size=4,       # ✅ fits 8GB GPU
     per_device_eval_batch_size=4,
     gradient_accumulation_steps=4,       # ✅ simulates batch 32
-    num_train_epochs=1,
+    num_train_epochs=3,
     learning_rate=2e-5,
     weight_decay=0.01,
     fp16=True,                           # ✅ faster on RTX
@@ -187,3 +175,4 @@ model.save_pretrained("./bert_toxic_model_multilabel_final")
 tokenizer.save_pretrained("./bert_toxic_model_multilabel_final")
 
 print("✅ Multi-label BERT model trained and saved successfully!")
+
