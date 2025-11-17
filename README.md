@@ -7,6 +7,9 @@ python -m venv venv
 
 venv\Scripts\activate
 
+pip install -r requirements.txt
+
+
 if venv activate has error: (ONE TIME CODE ONLY -- FOR THE FIRST ERROR ONLY!)
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
@@ -17,3 +20,5 @@ python install_dependencies.py
 python gputest.py
 
 python bert_train.py
+
+
